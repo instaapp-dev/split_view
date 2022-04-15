@@ -41,6 +41,8 @@ class SplitView extends StatefulWidget {
   /// Grip indicator for active state.
   final Widget? activeIndicator;
 
+  final ValueChanged<UnmodifiableListView<Offset?>>? onMovement;
+
   /// Creates a [SplitView].
   SplitView({
     Key? key,
@@ -53,6 +55,7 @@ class SplitView extends StatefulWidget {
     this.onWeightChanged,
     this.indicator,
     this.activeIndicator,
+    this.onMovement,
   }) : super(key: key);
 
   @override
@@ -69,6 +72,10 @@ class _SplitViewState extends State<SplitView> {
   late double _startWeight2;
   late double _startSize;
   late Offset _startDragPos;
+
+  late Offset _startGlobalCoor;
+  late Offset _endGlobalCoor;
+   
 
   @override
   void initState() {
@@ -147,6 +154,7 @@ class _SplitViewState extends State<SplitView> {
                 _gripColor = widget.gripColorActive;
                 _startDragPos =
                     _getLocalPosition(context, details.globalPosition);
+                _startGlobalCoor = details.globalPosition;
                 _startWeight1 = _controller.weights[i]!;
                 _startWeight2 = _controller.weights[i + 1]!;
                 _startSize = viewsHeight * _startWeight1;
@@ -155,9 +163,11 @@ class _SplitViewState extends State<SplitView> {
                 _dragging = false;
                 _activeIndex = -1;
                 setState(() => _gripColor = widget.gripColor);
+                _setglobal();
               },
               onVerticalDragUpdate: (detail) {
                 final pos = _getLocalPosition(context, detail.globalPosition);
+                _endGlobalCoor = detail.globalPosition;
                 var diff = pos.dy - _startDragPos.dy;
                 _changeWeights(diff, viewsHeight, i);
               },
@@ -228,6 +238,7 @@ class _SplitViewState extends State<SplitView> {
                 _gripColor = widget.gripColorActive;
                 _startDragPos =
                     _getLocalPosition(context, details.globalPosition);
+                _startGlobalCoor = details.globalPosition;
                 _startWeight1 = _controller.weights[i]!;
                 _startWeight2 = _controller.weights[i + 1]!;
                 _startSize = viewsWidth * _startWeight1;
@@ -236,9 +247,11 @@ class _SplitViewState extends State<SplitView> {
                 _dragging = false;
                 _activeIndex = -1;
                 setState(() => _gripColor = widget.gripColor);
+                _setglobal();
               },
               onHorizontalDragUpdate: (detail) {
                 final pos = _getLocalPosition(context, detail.globalPosition);
+                _endGlobalCoor = detail.globalPosition;
                 var diff = pos.dx - _startDragPos.dx;
                 _changeWeights(diff, viewsWidth, i);
               },
@@ -291,6 +304,13 @@ class _SplitViewState extends State<SplitView> {
 
     if (widget.onWeightChanged != null) {
       widget.onWeightChanged!(_controller.weights);
+    }
+  }
+
+  void _setglobal(){
+    if (_dragging == false) {
+      print("movement val");
+      widget.onMovement!(UnmodifiableListView([_startGlobalCoor, _endGlobalCoor]));
     }
   }
 
